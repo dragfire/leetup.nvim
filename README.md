@@ -1,9 +1,7 @@
 # leetup.nvim
-Leet it up in Neovim
+A neovim plugin for [Leetup](https://github.com/dragfire/leetup)! Leet it up!
 
 ![List problems](./assets/demo.png?raw=true)
-
-A neovim plugin for [Leetup](https://github.com/dragfire/leetup)!
 
 ## TODO:
 - [x] Open floating window and display `leetup list`
