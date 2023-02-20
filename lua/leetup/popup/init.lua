@@ -1,6 +1,6 @@
+local baleia = require('baleia').setup {}
 local api = vim.api
 local buf, win
-local position = 0
 
 local function center(str)
   local width = api.nvim_win_get_width(0)
@@ -8,12 +8,12 @@ local function center(str)
   return string.rep(' ', shift) .. str
 end
 
-local function open_window()
+local function open_window(M)
   buf = api.nvim_create_buf(false, true)
   local border_buf = api.nvim_create_buf(false, true)
 
   api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
-  api.nvim_buf_set_option(buf, 'filetype', 'whid')
+  api.nvim_buf_set_option(buf, 'filetype', 'leet')
 
   local width = api.nvim_get_option("columns")
   local height = api.nvim_get_option("lines")
@@ -49,32 +49,29 @@ local function open_window()
   table.insert(border_lines, '╚' .. string.rep('═', win_width) .. '╝')
   api.nvim_buf_set_lines(border_buf, 0, -1, false, border_lines)
 
-  local border_win = api.nvim_open_win(border_buf, true, border_opts)
+  api.nvim_open_win(border_buf, true, border_opts)
   win = api.nvim_open_win(buf, true, opts)
   api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "' .. border_buf)
 
   api.nvim_win_set_option(win, 'cursorline', true) -- it highlight line with the cursor on it
 
   -- we can add title already here, because first line will never change
-  api.nvim_buf_set_lines(buf, 0, -1, false, { center('What have i done?'), '', '' })
-  api.nvim_buf_add_highlight(buf, -1, 'WhidHeader', 0, 0, -1)
+  api.nvim_buf_set_lines(buf, 0, -1, false, { center(M.header), '', '' })
+  api.nvim_buf_add_highlight(buf, -1, 'LeetHeader', 0, 0, -1)
+
+  return win
 end
 
-local function update_view(direction)
+local function update_view(M)
   api.nvim_buf_set_option(buf, 'modifiable', true)
-  position = position + direction
-  if position < 0 then position = 0 end
 
-  local result = vim.fn.systemlist('git diff-tree --no-commit-id --name-only -r  HEAD~' .. position)
+  local result = vim.fn.systemlist('leetup list')
   if #result == 0 then table.insert(result, '') end -- add  an empty line to preserve layout if there is no results
-  for k, v in pairs(result) do
-    result[k] = '  ' .. result[k]
-  end
 
-  api.nvim_buf_set_lines(buf, 1, 2, false, { center('HEAD~' .. position) })
-  api.nvim_buf_set_lines(buf, 3, -1, false, result)
+  api.nvim_buf_set_lines(buf, 1, 2, false, { center(M.help) })
+  baleia.buf_set_lines(buf, 3, -1, false, result)
 
-  api.nvim_buf_add_highlight(buf, -1, 'whidSubHeader', 1, 0, -1)
+  api.nvim_buf_add_highlight(buf, -1, 'LeetSubHeader', 1, 0, -1)
   api.nvim_buf_set_option(buf, 'modifiable', false)
 end
 
@@ -119,17 +116,13 @@ local function set_mappings()
   end
 end
 
-local function whid()
-  position = 0
-  open_window()
-  set_mappings()
-  update_view(0)
-  api.nvim_win_set_cursor(win, { 4, 0 })
-end
-
 return {
-  whid = whid,
+  buf = buf,
+  win = win,
+  center = center,
+  set_mappings = set_mappings,
   update_view = update_view,
+  open_window = open_window,
   open_file = open_file,
   move_cursor = move_cursor,
   close_window = close_window
