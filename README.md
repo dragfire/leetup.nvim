@@ -10,4 +10,5 @@ A neovim plugin for [Leetup](https://github.com/dragfire/leetup)! Leet it up!
 - [ ] Split window vertically instead of floating window
 - [ ] Render list of problems in the split window
 - [ ] Provide a way to get/build `leetup` binary from inside the plugin
+- [ ] Make leetup configurable from init.lua (vimrc)
 - [ ] ... more ...
