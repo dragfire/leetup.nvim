@@ -65,8 +65,8 @@ end
 local function update_view(M)
   api.nvim_buf_set_option(buf, 'modifiable', true)
 
-  local result = vim.fn.systemlist('leetup list')
-  if #result == 0 then table.insert(result, '') end -- add  an empty line to preserve layout if there is no results
+  local result = vim.fn.systemlist(M.command)
+  if #result == 0 then table.insert(result, M.empty_result_msg) end -- add  an empty line to preserve layout if there is no results
 
   api.nvim_buf_set_lines(buf, 1, 2, false, { center(M.help) })
   baleia.buf_set_lines(buf, 3, -1, false, result)
@@ -90,13 +90,12 @@ local function move_cursor()
   api.nvim_win_set_cursor(win, { new_pos, 0 })
 end
 
-local function set_mappings()
+local function set_mappings(M)
+  api.nvim_buf_set_keymap(buf, 'n', M.search_key_map, ':lua require"leetup".search()<cr>', {
+    nowait = true, noremap = true, silent = true
+  })
   local mappings = {
-    ['['] = 'update_view(-1)',
-    [']'] = 'update_view(1)',
     ['<cr>'] = 'open_file()',
-    h = 'update_view(-1)',
-    l = 'update_view(1)',
     q = 'close_window()',
     k = 'move_cursor()'
   }
@@ -107,7 +106,7 @@ local function set_mappings()
     })
   end
   local other_chars = {
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'i', 'n', 'o', 'p', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+    'a', 'b', 'c', 'd', 'e', 'g', 'i', 'n', 'o', 'p', 'r', 't', 'u', 'v', 'w', 'x', 'y', 'z'
   }
   for k, v in ipairs(other_chars) do
     api.nvim_buf_set_keymap(buf, 'n', v, '', { nowait = true, noremap = true, silent = true })

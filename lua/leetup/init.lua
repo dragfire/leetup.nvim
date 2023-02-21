@@ -1,9 +1,15 @@
 local popup = require('leetup.popup')
 
-local M = {}
+local list_cmd = 'leetup list'
 
-M.header = 'Leet it up!'
-M.help = 'Filter: <leader>f'
+local M = {
+  header = 'Leet it up!',
+  help = 'Search: <leader>s',
+  command = list_cmd,
+  empty_result_msg = 'Did not find any match!',
+  search_key_map = '<leader>s',
+  default_language = 'rust'
+}
 
 M.split_window = function()
   vim.cmd('vsplit')
@@ -14,11 +20,20 @@ end
 
 local function load()
   local win = popup.open_window(M)
-  popup.set_mappings()
+  popup.set_mappings(M)
   popup.update_view(M)
   vim.api.nvim_win_set_cursor(win, { 4, 0 })
 end
 
+local function search()
+  vim.ui.input({ prompt = "Search: " }, function(input)
+    M.command = list_cmd .. ' ' .. input
+    M.empty_result_msg = 'Search returned empty'
+    popup.update_view(M)
+  end)
+end
+
 return {
-  load = load
+  load = load,
+  search = search
 }
