@@ -59,7 +59,7 @@ local function open_window(M)
   api.nvim_buf_set_lines(buf, 0, -1, false, { center(M.header), '', '' })
   api.nvim_buf_add_highlight(buf, -1, 'LeetHeader', 0, 0, -1)
 
-  return win
+  return win, buf
 end
 
 local function update_view(M)
@@ -69,7 +69,7 @@ local function update_view(M)
   if #result == 0 then table.insert(result, M.empty_result_msg) end -- add  an empty line to preserve layout if there is no results
 
   api.nvim_buf_set_lines(buf, 1, 2, false, { center(M.help) })
-  baleia.buf_set_lines(buf, 3, -1, false, result)
+  baleia.buf_set_lines(buf, 3, -1, false, M.process_result(result))
 
   api.nvim_buf_add_highlight(buf, -1, 'LeetSubHeader', 1, 0, -1)
   api.nvim_buf_set_option(buf, 'modifiable', false)
@@ -79,10 +79,29 @@ local function close_window()
   api.nvim_win_close(win, true)
 end
 
+local function get_number_in_brackets(row)
+  return tonumber(row:match("%[(%s*%d+%s*)%]"))
+end
+
+local function get_filename_from_path(path)
+  local filename = string.match(path, "/([^/]+)$")
+  return filename
+end
+
+local function strip_ansi_escapes(str)
+  return str:gsub('[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]', '')
+end
+
 local function open_file()
   local str = api.nvim_get_current_line()
+
   close_window()
-  api.nvim_command('edit ' .. str)
+
+  local problem_id = get_number_in_brackets(str)
+  local generated_file = vim.fn.system('leetup pick -gl rust ' .. problem_id)
+  local filename = get_filename_from_path(strip_ansi_escapes(generated_file))
+
+  api.nvim_command('edit ' .. filename)
 end
 
 local function move_cursor()
@@ -90,7 +109,7 @@ local function move_cursor()
   api.nvim_win_set_cursor(win, { new_pos, 0 })
 end
 
-local function set_mappings(M)
+local function set_mappings(M, buf)
   api.nvim_buf_set_keymap(buf, 'n', M.search_key_map, ':lua require"leetup".search()<cr>', {
     nowait = true, noremap = true, silent = true
   })
