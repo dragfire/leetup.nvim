@@ -1,7 +1,11 @@
 # leetup.nvim
 A neovim plugin for [Leetup](https://github.com/dragfire/leetup)! Leet it up!
 
+### List Problems
+
 ![List problems](./assets/demo.gif?raw=true)
+
+### Edit Problem
 
 ![Edit problems](./assets/edit.gif?raw=true)
 
@@ -9,9 +13,7 @@ A neovim plugin for [Leetup](https://github.com/dragfire/leetup)! Leet it up!
 ```lua
 {
     "dragfire/leetup.nvim",
-    dependencise = {
-        "m00qek/baleia.nvim"
-    }
+    dependencise = { "m00qek/baleia.nvim" }
 }
 ```
 
