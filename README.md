@@ -14,6 +14,26 @@ A neovim plugin for [Leetup](https://github.com/dragfire/leetup)! Leet it up!
 {
     "dragfire/leetup.nvim",
     dependencise = { "m00qek/baleia.nvim" }
+    opts = {},
+    config = function (_, opts)
+        require("leetup").setup(opts)
+    end
+}
+```
+### default config
+```lua
+{
+  language = "rs",
+  floating_window = {
+    borderchars = {
+      ul = "╔",
+      ur = "╗",
+      dl = "╚",
+      dr = "╝",
+      r = "═",
+      l = "║",
+    },
+  },
 }
 ```
 

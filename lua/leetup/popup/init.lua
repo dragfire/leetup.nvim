@@ -40,13 +40,14 @@ local function open_window(M)
 		row = row,
 		col = col,
 	}
+  local bc = M.conf.floating_window.borderchars
 
-	local border_lines = { "╔" .. string.rep("═", win_width) .. "╗" }
-	local middle_line = "║" .. string.rep(" ", win_width) .. "║"
+	local border_lines = { bc.ul .. string.rep(bc.r, win_width) .. bc.ur }
+	local middle_line = bc.l .. string.rep(" ", win_width) .. bc.l
 	for i = 1, win_height do
 		table.insert(border_lines, middle_line)
 	end
-	table.insert(border_lines, "╚" .. string.rep("═", win_width) .. "╝")
+	table.insert(border_lines, bc.dl .. string.rep(bc.r, win_width) .. bc.dr)
 	api.nvim_buf_set_lines(border_buf, 0, -1, false, border_lines)
 
 	api.nvim_open_win(border_buf, true, border_opts)
@@ -57,7 +58,7 @@ local function open_window(M)
 
 	-- we can add title already here, because first line will never change
 	api.nvim_buf_set_lines(buf, 0, -1, false, { center(M.header), "", "" })
-	api.nvim_buf_add_highlight(buf, -1, "LeetHeader", 0, 0, -1)
+  api.nvim_buf_add_highlight(buf, -1, 'LeetHeader', 0, 0, -1)
 
 	return win, buf
 end
@@ -84,33 +85,42 @@ end
 local function get_number_in_brackets(row)
 	return tonumber(row:match("%[(%s*%d+%s*)%]"))
 end
+local function get_name_in_brackets(str)
+	local c
+	if str:find("Easy") then
+		c = "Easy"
+	elseif str:find("Medium") then
+		c = "Medium"
+	else
+		c = "Hard"
+	end
+	local res = str:match("%](.-)" .. c):gsub("^[%s]*(.-)[%s]*$", "%1")
+	return res
+end
 
 local function get_filename_from_path(path)
 	local filename = string.match(path, "/([^/]+)$")
 	return filename
 end
 
-local function strip_ansi_escapes(str)
-	-- str:gsub("[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]", "")
-  return str.match(str, "%^(.-)%^"):gsub("%[%[35m","")
+local function get_filepath(path)
+	return string.match(path, "Generated: (%S+)")
 end
 
-local function open_file()
+local function strip_ansi_escapes(str)
+	return str:gsub("[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]", "")
+end
+
+local function open_file(M)
 	local str = api.nvim_get_current_line()
 
 	close_window()
 
 	local problem_id = get_number_in_brackets(str)
-	-- local generated_file = vim.fn.system('leetup pick -gl rust ' .. problem_id)
-	local generated_file = vim.api.nvim_exec2("!leetup pick -gl rust " .. problem_id, { output = true })
-  local generated_file_name
-  for _, value in pairs(generated_file) do
-    generated_file_name = value
-  end
-	-- local filename = get_filename_from_path(strip_ansi_escapes(generated_file_name))
-	local filename = strip_ansi_escapes(generated_file_name)
+	local generated_file = vim.fn.system("leetup pick -gl " .. M.conf.language .. " " .. problem_id)
+	local filepath = get_filepath(strip_ansi_escapes(generated_file))
 
-	api.nvim_command("edit " .. filename)
+	api.nvim_command("edit " .. filepath)
 end
 
 local function move_cursor()
@@ -124,19 +134,32 @@ local function set_mappings(M, buf)
 		noremap = true,
 		silent = true,
 	})
-	local mappings = {
-		["<cr>"] = "open_file()",
-		q = "close_window()",
-		k = "move_cursor()",
-	}
-
-	for k, v in pairs(mappings) do
-		api.nvim_buf_set_keymap(buf, "n", k, ':lua require"leetup.popup".' .. v .. "<cr>", {
-			nowait = true,
-			noremap = true,
-			silent = true,
-		})
-	end
+	-- local mappings = {
+	-- 	["<cr>"] = "open_file(M)",
+	-- 	q = "close_window()",
+	-- 	k = "move_cursor()",
+	-- }
+	api.nvim_buf_set_keymap(buf, "n", "<cr>", "", {
+		nowait = true,
+		noremap = true,
+		callback = function()
+			open_file(M)
+		end,
+	})
+	api.nvim_buf_set_keymap(buf, "n", "q", "", {
+		nowait = true,
+		noremap = true,
+		callback = function()
+			close_window()
+		end,
+	})
+	api.nvim_buf_set_keymap(buf, "n", "k", "", {
+		nowait = true,
+		noremap = true,
+		callback = function()
+			move_cursor()
+		end,
+	})
 	local other_chars = {
 		"a",
 		"b",
